@@ -36,6 +36,10 @@ class Product(models.Model):
     def __str__(self):
         return "%s: %s грн." % (self.product_name, self.price)
 
+    def save(self, *args, **kwargs):
+        self.slug = slugify(unidecode(self.product_name))
+        super(Product, self).save(*args, *kwargs)
+
     def discount_price(self):
         price = self.price * 100 / self.discount
         return price
@@ -43,12 +47,17 @@ class Product(models.Model):
 class ProductDetail(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True)
     option_name = models.CharField(max_length=100)
+    option_slug = models.SlugField(max_length=100)
     option_value = models.CharField(max_length=200)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '{}: {} - {}'.format(self.product.product_name, self.option_name, self.option_value)
+
+    def save(self, *args, **kwargs):
+        self.option_slug = slugify(unidecode(self.option_name))
+        super(ProductDetail, self).save(*args, **kwargs)
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, blank=True, null=True)
@@ -63,5 +72,4 @@ class ProductImage(models.Model):
         if self.main:
             string = "Main image of {product}".format(product=self.product.product_name)
         return string
-
 
